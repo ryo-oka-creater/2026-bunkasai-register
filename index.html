@@ -541,15 +541,7 @@ ts:new Date().toISOString(),staff:localStorage.getItem('staffName') || '未設�
 
 const latest = journal[journal.length - 1];
 fetch(
-"https://script.google.com/macros/s/AKfycbzU8rFAoUj6B2VfDmPnLyHE_Jl5G0Hboy0HuEk-UGFapt5Bk5i_ia7I9j6cpj1wTPY-/exec",
-{
-method:"POST",
-headers:{
-"Content-Type":"application/json"
-},
-body:JSON.stringify(latest)
-})
-.then(response => response.text())
+(response => response.text())
 .then(text => {
 alert("Apps Script応答: " + text);
 })
