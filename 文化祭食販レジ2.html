@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>かんたん会計</title>
+  <style>
+    :root {
+      --bg: #f7f7fb;
+      --card: #ffffff;
+      --text: #222;
+      --muted: #666;
+      --accent: #3b82f6;
+      --danger: #ef4444;
+      --ok: #16a34a;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: system-ui, sans-serif; background: var(--bg); color: var(--text); }
+    .container { max-width: 1100px; margin: 0 auto; padding: 16px; display: grid; gap: 16px; grid-template-columns: 1.2fr 1fr; }
+    header { grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: center; }
+    h1 { font-size: 22px; margin: 0; }
+    .card { background: var(--card); border-radius: 16px; box-shadow: 0 6px 20px rgba(0,0,0,.06); padding: 16px; }
+    .group { display: flex; gap: 12px; margin-bottom: 12px; }
+    .btn { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 12px;
+           padding: 20px; font-weight: 700; font-size: 20px; cursor: pointer; background: #eef2ff; user-select: none;
+           height: 100px; }
+    .btn .price { font-size: 16px; font-weight: 600; color: var(--muted); }
+    .btn.smallFont { font-size: 18px; }
+    .right { display: grid; gap: 16px; grid-template-rows: auto 1fr auto; }
+    .list { max-height: 300px; overflow: auto; font-size: 14px; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 6px 8px; text-align: left; font-size: 14px; }
+    thead th { position: sticky; top: 0; background: #f0f3ff; }
+    tbody tr:nth-child(odd) { background: #fafbff; }
+    .total { font-size: 24px; font-weight: 900; }
+    input[type="number"], input[type="text"] { width: 100%; padding: 8px 10px; border-radius: 8px; border: 1px solid #ccc; font-size: 16px; }
+    .actions { display: flex; gap: 10px; flex-wrap: wrap; }
+    .actionBtn { padding: 10px 14px; border-radius: 8px; border: 0; cursor: pointer; font-weight: 700; }
+    .primary { background: var(--accent); color: #fff; }
+    .danger {
+background: #ef4444;
+color: #fff;
+font-size: 18px;
+padding: 16px 24px;
+}
+    .ok {
+background: #16a34a;
+color: #fff;
+font-size: 24px;
+font-weight: 800;
+padding: 22px 36px;
+border-radius: 12px;
+transition: all 0.2s ease;
+}
+    .muted { background: #e5e7eb; }
+    .small { font-size: 12px; color: var(--muted); }
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    @media (max-width: 900px) { .container { grid-template-columns: 1fr; } .group { flex-direction: column; } }
+    .modalOverlay { position: fixed; inset: 0; background: rgba(0,0,0,.35); display: none; align-items: center; justify-content: center; padding: 16px; z-index: 1000; }
+    .modalOverlay.show { display: flex; }
+    .modalCard { width: min(760px, 100%); max-height: 85vh; overflow: auto; background: #fff; border-radius: 16px; box-shadow: 0 10px 35px rgba(0,0,0,.2); padding: 16px; }
+    .modalHeader { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 12px; }
+    .historyTable th, .historyTable td { vertical-align: top; }
+    .historyEmpty { padding: 20px 0; color: var(--muted); text-align: center; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div>
+        <h1>食品販売 会計</h1>
+        <div style="margin-top:6px;font-size:14px;line-height:1.5;">
+担当：<span id="staffName">未設定</span>
+          <button class="actionBtn muted" id="changeStaffBtn" style="padding:5px 9px;margin-left:6px;">設定変更</button>
+<button class="actionBtn primary" id="showHistoryBtn" style="padding:5px 9px;margin-left:6px;">今回の会計履歴</button>
+        </div>
+      </div>
+      <div class="actions">
+<button class="actionBtn ok" id="downloadExcel">Excel出力</button>
+</div>
+    </header>
+
+    <!-- 左側 商品ボタン -->
+    <section class="card" id="items"></section>
+
+    <!-- 右側 会計エリア -->
+    <section class="right">
+      <div class="card list">
+        <table>
+          <thead>
+            <tr>
+              <th>品名</th><th>単価</th><th>数量</th><th>小計</th>
+            </tr>
+          </thead>
+          <tbody id="cartBody"></tbody>
+        </table>
+      </div>
+      <div class="card">
+        <div class="total">合計：<span id="grandTotal">¥0</span></div>
+        <div class="grid2" style="margin-top:10px">
+          <div><label class="small">いただいた金額</label><input type="text" id="paidInput" inputmode="numeric" pattern="[0-9]*" placeholder="0"></div>
+          <div><label class="small">お釣り</label><input type="text" id="changeOut" readonly></div>
+        </div>
+      </div>
+      <div class="card">
+        <button class="actionBtn ok" id="checkoutBtn">会計 確定</button>
+      </div>
+    </section>
+  </div>
+
+<div class="modalOverlay" id="staffModal">
+<div class="modalCard">
+<h2>販売設定</h2>
+<div style="margin-bottom:10px;">
+<label>担当者名</label>
+<input type="text" id="modalStaffName">
+</div>
+<div style="margin-bottom:10px;">
+<label>販売日</label>
+<select id="modalSaleDay">
+<option value="土曜">土曜</option>
+<option value="日曜">日曜</option>
+</select>
+</div>
+<div style="margin-bottom:10px;">
+<label>販売形式</label>
+<select id="modalShiftType">
+<option value="チケット売り場">
+チケット売り場
+</option>
+<option value="各ブース現金販売">
+各ブース現金販売
+</option>
+</select>
+</div>
+<div style="margin-bottom:10px;">
+<label>シフト開始時間</label>
+<select id="modalStartTime"></select>
+</div>
+<button
+class="actionBtn primary"
+id="saveStaffBtn">
+保存
+</button>
+</div>
+</div>
+
+
+  <div class="modalOverlay" id="historyModal">
+    <div class="modalCard">
+      <div class="modalHeader">
+        <div>
+          <h2 style="margin:0;font-size:20px;">今回の会計履歴</h2>
+          <div class="small" id="historyStaffLabel"></div>
+        </div>
+        <button class="actionBtn muted" id="closeHistoryBtn">閉じる</button>
+      </div>
+      <div id="historyContent"></div>
+    </div>
+  </div>
+
+  <script>
+    const itemsData = {
+      CAL: {id:'CAL', name:'ナタデココドリンク（カルピス）', price:110, small:true},
+      PEA: {id:'PEA', name:'ナタデココドリンク（ピーチ）', price:110, small:true},
+      DUB: {id:'DUB', name:'ドバイチョコ', price:620},
+      TAK: {id:'TAK', name:'たこ焼き', price:150},
+      POT: {id:'POT', name:'フライドポテト', price:100}
+    };
+
+    const itemGroups = [
+      ['CAL','PEA'],
+      ['DUB'],
+      ['TAK','POT']
+    ];
+
+    let cart = [];
+
+    const staffNameEl = document.getElementById('staffName');
+    const changeStaffBtn = document.getElementById('changeStaffBtn');
+    const showHistoryBtn = document.getElementById('showHistoryBtn');
+    const historyModal = document.getElementById('historyModal');
+    const closeHistoryBtn = document.getElementById('closeHistoryBtn');
+    const historyContent = document.getElementById('historyContent');
+    const historyStaffLabel = document.getElementById('historyStaffLabel');
+
+const staffModal =
+document.getElementById('staffModal');
+const modalStaffName =
+document.getElementById('modalStaffName');
+const modalSaleDay =
+document.getElementById('modalSaleDay');
+const modalShiftType =
+document.getElementById('modalShiftType');
+const modalStartTime =
+document.getElementById('modalStartTime');
+const saveStaffBtn =
+document.getElementById('saveStaffBtn');
+
+const startTimeOptions = {
+'チケット売り場': [
+'09時',
+'09時半',
+'10時',
+'10時半',
+'11時',
+'11時半',
+'12時',
+'12時半',
+'13時',
+'13時半',
+'14時'
+],
+'各ブース現金販売': [
+'14時半頃～'
+]
+};
+function updateModalStartTimes(){
+const shift = modalShiftType.value;
+modalStartTime.innerHTML = '';
+startTimeOptions[shift].forEach(time => {
+const option =
+document.createElement('option');
+option.value = time;
+option.textContent = time;
+modalStartTime.appendChild(option);
+});
+if(shift === '各ブース現金販売'){
+modalStartTime.value = '14時半頃～';
+modalStartTime.disabled = true;
+}else{
+modalStartTime.disabled = false;
+}
+}
+modalShiftType.addEventListener(
+'change',
+updateModalStartTimes
+);
+
+
+function setStaffName(){
+modalStaffName.value =
+localStorage.getItem('staffName') || '';
+modalSaleDay.value =
+localStorage.getItem('saleDay') || '土曜';
+modalShiftType.value =
+localStorage.getItem('shiftType') ||
+'チケット売り場';
+updateModalStartTimes();
+modalStartTime.value =
+localStorage.getItem('startTime') || '';
+staffModal.classList.add('show');
+}
+ 
+
+
+function updateStaffDisplay(){
+const staff = localStorage.getItem('staffName') || '未設定';
+const saleDay = localStorage.getItem('saleDay') || '';
+const shiftType = localStorage.getItem('shiftType') || '';
+const startTime = localStorage.getItem('startTime') || '';
+if(staff === '未設定'){
+staffNameEl.innerHTML = '未設定';
+return;
+}
+staffNameEl.innerHTML =
+`${staff}<br>` +
+`（販売日:${saleDay} / 形式:${shiftType} / 開始:${startTime}）`;
+}
+
+
+
+
+
+   function loadStaffName(){
+const name = localStorage.getItem('staffName') || '';
+updateStaffDisplay();
+if(!name) setTimeout(setStaffName, 200);
+}
+
+    changeStaffBtn.addEventListener('click', setStaffName);
+
+
+saveStaffBtn.addEventListener('click', ()=>{
+
+const staffName =
+modalStaffName.value.trim();
+if(!staffName){
+alert('担当者・曜日・販売形式・シフト開始時間を設定してください。');
+modalStaffName.focus();
+return;
+}
+
+
+localStorage.setItem(
+'staffName',
+modalStaffName.value
+);
+localStorage.setItem(
+'saleDay',
+modalSaleDay.value
+);
+localStorage.setItem(
+'shiftType',
+modalShiftType.value
+);
+localStorage.setItem(
+'startTime',
+modalStartTime.value
+);
+updateStaffDisplay();
+staffModal.classList.remove('show');
+});
+
+
+
+    function formatTime(ts){
+      const d = new Date(ts);
+      return d.toLocaleTimeString('ja-JP', {hour:'2-digit', minute:'2-digit'});
+    }
+
+    function renderHistory(){
+      const staff = localStorage.getItem('staffName') || '';
+      historyStaffLabel.textContent =
+'今回の会計履歴';
+
+      if(!staff){
+        historyContent.innerHTML = '<div class="historyEmpty">先に担当者名を設定してください。</div>';
+        return;
+      }
+
+
+      const journal = JSON.parse(localStorage.getItem('journal') || '[]');
+      const mine = journal;
+
+      if(mine.length === 0){
+historyContent.innerHTML =
+'<div class="historyEmpty">今回の会計記録はまだありません。</div>';
+return;
+}
+
+// 商品別集計
+const summary = {};
+mine.forEach(j => {
+j.lines.forEach((r, lineIndex)=>{
+const isLastLine =
+lineIndex === j.lines.length - 1;
+
+if (!summary[r.name]) {
+summary[r.name] = 0;
+}
+summary[r.name] += r.qty;
+});
+});
+let summaryHtml = `
+<div class="card" style="margin-bottom:12px;">
+<h3 style="margin-top:0;">商品別 販売数合計</h3>
+<table>
+<thead>
+<tr>
+<th>商品名</th>
+<th>合計個数</th>
+</tr>
+</thead>
+<tbody>
+`;
+Object.entries(summary).forEach(([name, qty]) => {
+summaryHtml += `
+<tr>
+<td>${name}</td>
+<td>${qty}個</td>
+</tr>
+`;
+});
+summaryHtml += `
+</tbody>
+</table>
+</div>
+`;
+
+      let rows = '';
+      mine.slice().reverse().forEach(j => {
+        const itemLines = j.lines.map(r => r.name).join('<br>');
+        const qtyLines = j.lines.map(r => r.qty).join('<br>');
+        rows += `
+<tr>
+<td>${j.staff}</td>
+<td>${j.saleDay || ''}</td>
+<td>${formatTime(j.ts)}</td>
+<td>${itemLines}</td>
+<td>${qtyLines}</td>
+<td>${yen(j.total)}</td>
+<td>
+<button
+class="actionBtn danger"
+onclick="deleteHistory('${j.ts}')">
+削除
+</button>
+</td>
+</tr>`
+      });
+
+historyContent.innerHTML = `
+${summaryHtml}
+<table class="historyTable">          
+<thead>
+<tr>
+<th>担当者</th>
+<th>販売日</th>
+<th>時間</th>
+<th>商品</th>
+<th>個数</th>
+<th>合計</th>
+<th>操作</th>
+</tr>
+ </thead>
+          <tbody>${rows}</tbody>
+        </table>`;
+    }
+
+
+function deleteHistory(ts){
+if(!confirm('この会計記録を削除しますか？')){
+return;
+}
+let journal =
+JSON.parse(localStorage.getItem('journal') || '[]');
+journal =
+journal.filter(j => j.ts !== ts);
+localStorage.setItem(
+'journal',
+JSON.stringify(journal)
+);
+renderHistory();
+}
+
+    showHistoryBtn.addEventListener('click', ()=>{
+      renderHistory();
+      historyModal.classList.add('show');
+    });
+
+    closeHistoryBtn.addEventListener('click', ()=>{
+      historyModal.classList.remove('show');
+    });
+
+    historyModal.addEventListener('click', (e)=>{
+      if(e.target === historyModal) historyModal.classList.remove('show');
+    });
+
+    function yen(n){ return '¥' + n.toLocaleString('ja-JP'); }
+    function renderItems(){
+      const wrap=document.getElementById('items');
+      wrap.innerHTML='';
+      itemGroups.forEach(groupIds=>{
+        const group=document.createElement('div');
+        group.className='group';
+        groupIds.forEach(id=>{
+          const it=itemsData[id];
+          const btn=document.createElement('button');
+          btn.className='btn'+(it.small?' smallFont':'');
+          btn.innerHTML=`<div>${it.name}</div><div class="price">${yen(it.price)}</div>`;
+          btn.onclick=()=>addToCart(it);
+          group.appendChild(btn);
+        });
+        wrap.appendChild(group);
+      });
+    }
+    function addToCart(it){
+      const row=cart.find(r=>r.id===it.id);
+      if(row) row.qty++;
+      else cart.push({...it, qty:1});
+      renderCart();
+    }
+    function computeTotal(){return cart.reduce((s,r)=>s+r.price*r.qty,0);}
+
+    function renderCart(){
+      const body=document.getElementById('cartBody'); 
+      body.innerHTML='';
+      cart.forEach((r,index)=>{
+        const tr=document.createElement('tr');
+        tr.innerHTML=`
+          <td>${r.name}</td>
+          <td>${yen(r.price)}</td>
+          <td><input type="number" min="0" value="${r.qty}" data-index="${index}" class="qtyInput" style="width:60px"></td>
+          <td>${yen(r.price*r.qty)}</td>
+          <td><button class="actionBtn danger small deleteBtn" data-index="${index}">削除</button></td>
+        `;
+        body.appendChild(tr);
+      });
+
+      // 数量変更イベント
+      body.querySelectorAll('.qtyInput').forEach(input=>{
+        input.addEventListener('input',(e)=>{
+          const idx=e.target.dataset.index;
+          const val=parseInt(e.target.value||'0',10);
+          if(val<=0){ 
+            cart.splice(idx,1); // 0以下なら削除
+          } else {
+            cart[idx].qty=val;
+          }
+          renderCart();
+        });
+      });
+
+      // 削除ボタンイベント
+      body.querySelectorAll('.deleteBtn').forEach(btn=>{
+        btn.addEventListener('click',(e)=>{
+          const idx=e.target.dataset.index;
+          cart.splice(idx,1);
+          renderCart();
+        });
+      });
+
+      document.getElementById('grandTotal').textContent=yen(computeTotal());
+      updateChange();
+    }
+
+    const paidInput=document.getElementById('paidInput');
+    const changeOut=document.getElementById('changeOut');
+    paidInput.addEventListener('input',updateChange);
+    function updateChange(){
+      const paid=parseInt(paidInput.value||'0',10);
+      const change=paid-computeTotal();
+      changeOut.value= change>=0 ? yen(change) : '不足:'+yen(-change);
+    }
+    document.getElementById('checkoutBtn').addEventListener('click',()=>{
+      if(cart.length===0) return alert('カートが空です');
+      const paid=parseInt(paidInput.value||'0',10);
+      const total=computeTotal();
+      if(paid<total) return alert('お支払いが不足しています');
+      const journal=JSON.parse(localStorage.getItem('journal')||'[]');
+journal.push({
+saleDay: localStorage.getItem('saleDay') || '土曜',
+shiftType: localStorage.getItem('shiftType') || 'チケット売り場',
+startTime: localStorage.getItem('startTime') || '',
+ts:new Date().toISOString(),staff:localStorage.getItem('staffName') || '未設定',
+        lines:cart.map(r=>({id:r.id,name:r.name,price:r.price,qty:r.qty,subtotal:r.price*r.qty})),
+        total,paid,change:paid-total
+      });
+
+
+const latest = journal[journal.length - 1];
+fetch("https://script.google.com/macros/s/AKfycbzU8rFAoUj6B2VfDmPnLyHE_Jl5G0Hboy0HuEk-UGFapt5Bk5i_ia7I9j6cpj1wTPY-/exec",{
+method:"POST",
+headers:{
+"Content-Type":"application/json"
+},
+body:JSON.stringify(latest)
+})
+.catch(err=>console.error(err));
+
+
+      localStorage.setItem('journal',JSON.stringify(journal));
+      cart=[]; renderCart(); paidInput.value=''; updateChange();
+      if(historyModal.classList.contains('show')) renderHistory();
+      alert('会計を記録しました');
+    });
+
+
+    document.getElementById('downloadExcel').addEventListener('click',()=>{
+
+const journal=JSON.parse(localStorage.getItem('journal')||'[]');
+      if(journal.length===0) return alert('データがありません');
+
+const detailData = [];
+
+journal.forEach((j,index)=>{
+const receiptNo = index + 1;
+j.lines.forEach((r, lineIndex)=>{
+
+const isLastLine =
+lineIndex === j.lines.length - 1;
+
+const d = new Date(j.ts);
+const dateTime =
+d.getFullYear() + '/' +
+String(d.getMonth()+1).padStart(2,'0') + '/' +
+String(d.getDate()).padStart(2,'0') +
+' ' +
+String(d.getHours()).padStart(2,'0') + ':' +
+String(d.getMinutes()).padStart(2,'0');
+
+
+detailData.push({
+販売日: j.saleDay,
+担当者: j.staff,
+販売形式: j.shiftType,
+シフト開始: j.startTime,
+会計日時: dateTime,
+番号: receiptNo,
+商品id: r.id,
+品目: r.name,
+単価: r.price,
+数量: r.qty,
+小計: r.subtotal,
+合計: isLastLine ? j.total : '',
+支払: isLastLine ? j.paid : '',
+お釣り: isLastLine ? j.change : ''
+});
+});
+});
+
+const summary = {};
+
+journal.forEach(j=>{
+j.lines.forEach(r=>{
+if(!summary[r.name]){
+summary[r.name] = {
+qty:0,
+total:0
+};
+
+
+}
+summary[r.name].qty += r.qty;
+summary[r.name].total += r.subtotal;
+});
+});
+
+const summaryData =
+Object.entries(summary).map(
+([name,data])=>({
+商品名:name,
+販売数:data.qty,
+売上金額:data.total
+}));
+
+const wb = XLSX.utils.book_new();
+const ws1 =
+XLSX.utils.json_to_sheet(detailData);
+const ws2 =
+XLSX.utils.json_to_sheet(summaryData);
+XLSX.utils.book_append_sheet(
+wb,
+ws1,
+'各会計の明細内容'
+);
+XLSX.utils.book_append_sheet(
+wb,
+ws2,
+'販売個数と合計金額'
+);
+
+if(!confirm(
+'Excelをダウンロードしますか？（ブラウザ上の会計履歴は削除されます。）'
+)){
+return;
+}
+
+const fileStaff =
+localStorage.getItem('staffName') || '未設定';
+const fileSaleDay =
+localStorage.getItem('saleDay') || '';
+const fileStartTime =
+localStorage.getItem('startTime') || '';
+
+const now = new Date();
+const ymd =
+now.getFullYear() +
+String(now.getMonth()+1).padStart(2,'0') +
+String(now.getDate()).padStart(2,'0');
+const hm =
+String(now.getHours()).padStart(2,'0') +
+String(now.getMinutes()).padStart(2,'0');
+const fileName =
+`${fileStaff}_${fileSaleDay}_${fileStartTime}_${ymd}_${hm}.xlsx`;
+
+
+XLSX.writeFile(
+wb,
+fileName
+);
+
+localStorage.removeItem('journal');
+if(historyModal.classList.contains('show')){
+renderHistory();
+}
+alert('Excelをダウンロードし、会計履歴を削除しました。');
+});
+
+renderItems();
+renderCart();
+loadStaffName();
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</body>
+</html>
