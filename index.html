@@ -544,25 +544,21 @@ fetch(
 "https://script.google.com/macros/s/AKfycbzU8rFAoUj6B2VfDmPnLyHE_Jl5G0Hboy0HuEk-UGFapt5Bk5i_ia7I9j6cpj1wTPY-/exec",
 {
 method: "POST",
+mode: "no-cors",
 headers: {
 "Content-Type": "application/json"
 },
 body: JSON.stringify(latest)
 }
 )
-.then(response => response.text())
-.then(text => {
-alert("Apps Script応答: " + text);
+.then(() => {
+alert("送信処理実行");
 })
 .catch(error => {
-alert(
-"送信エラー:\n" +
-error.name + "\n" +
-error.message
-);
-console.error(error);
+alert("送信エラー: " + error);
 });
-    localStorage.setItem('journal',JSON.stringify(journal));
+
+localStorage.setItem('journal',JSON.stringify(journal));
 cart=[]; renderCart();
 paidInput.value='';
 updateChange();
@@ -571,7 +567,6 @@ renderHistory();
 }
 alert('会計を記録しました');    
 });
-
 
     document.getElementById('downloadExcel').addEventListener('click',()=>{
 
