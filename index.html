@@ -555,9 +555,14 @@ body: JSON.stringify(latest)
 alert("Apps Script応答: " + text);
 })
 .catch(error => {
-alert("送信エラー: " + error);
+alert(
+"送信エラー:\n" +
+error.name + "\n" +
+error.message
+);
+console.error(error);
 });
-localStorage.setItem('journal',JSON.stringify(journal));
+    localStorage.setItem('journal',JSON.stringify(journal));
 cart=[]; renderCart();
 paidInput.value='';
 updateChange();
