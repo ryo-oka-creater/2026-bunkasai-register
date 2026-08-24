@@ -547,7 +547,7 @@ renderHistory();
       if(paid<total) return alert('お支払いが不足しています');
       const journal=JSON.parse(localStorage.getItem('journal')||'[]');
 journal.push({
-  receiptNo: crypto.randomUUID(),
+receiptNo: crypto.randomUUID(),
 saleDay: localStorage.getItem('saleDay') || '土曜',
 shiftType: localStorage.getItem('shiftType') || 'チケット売り場',
 startTime: localStorage.getItem('startTime') || '',
@@ -580,7 +580,7 @@ const journal=JSON.parse(localStorage.getItem('journal')||'[]');
 const detailData = [];
 
 journal.forEach((j,index)=>{
-const receiptNo = index + 1;
+const receiptNo = j.receiptNo;
 j.lines.forEach((r, lineIndex)=>{
 
 const isLastLine =
