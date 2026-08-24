@@ -539,33 +539,22 @@ ts:new Date().toISOString(),staff:localStorage.getItem('staffName') || '未設�
       });
 
 const latest = journal[journal.length - 1];
-fetch(
-"https://script.google.com/macros/s/AKfycbykwGtDYJejSXcLcrNdNeAL5XUTfyXaCCixe96BKpbd47FrAmelht2LVJxRlw4k5kQu/exec",
-{
-method: "POST",
-mode: "no-cors",
-headers: {
-"Content-Type": "application/json"
+fetch("https://script.google.com/macros/s/AKfycbykwGtDYJejSXcLcrNdNeAL5XUTfyXaCCixe96BKpbd47FrAmelht2LVJxRlw4k5kQu/exec",{
+method:"POST",
+headers:{
+"Content-Type":"application/json"
 },
-body: JSON.stringify(latest)
-}
-)
-.then(() => {
-alert("送信処理実行");
+body:JSON.stringify(latest)
 })
-.catch(error => {
-alert("送信エラー: " + error);
-});
+.catch(err=>console.error(err));
 
-localStorage.setItem('journal',JSON.stringify(journal));
-cart=[]; renderCart();
-paidInput.value='';
-updateChange();
-if(historyModal.classList.contains('show')){
-renderHistory();
-}
-alert('会計を記録しました');    
-});
+
+      localStorage.setItem('journal',JSON.stringify(journal));
+      cart=[]; renderCart(); paidInput.value=''; updateChange();
+      if(historyModal.classList.contains('show')) renderHistory();
+      alert('会計を記録しました');
+    });
+
 
 
     document.getElementById('downloadExcel').addEventListener('click',()=>{
