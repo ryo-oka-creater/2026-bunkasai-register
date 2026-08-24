@@ -643,7 +643,26 @@ Object.entries(summary).map(
 const wb = XLSX.utils.book_new();
 const ws1 =
 XLSX.utils.json_to_sheet(detailData);
-const ws2 =
+
+ws1["!cols"] = [
+{wch:8},
+{wch:10},
+{wch:18},
+{wch:10},
+{wch:18},
+{wch:38},
+{wch:10},
+{wch:25},
+{wch:8},
+{wch:8},
+{wch:10},
+{wch:10},
+{wch:10},
+{wch:10},
+{wch:10}
+];
+          
+      const ws2 =
 XLSX.utils.json_to_sheet(summaryData);
 XLSX.utils.book_append_sheet(
 wb,
