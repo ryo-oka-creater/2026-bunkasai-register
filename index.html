@@ -425,6 +425,23 @@ return;
 }
 let journal =
 JSON.parse(localStorage.getItem('journal') || '[]');
+
+const target =
+journal.find(j => j.ts === ts);
+if(target){
+fetch(
+"https://script.google.com/macros/s/AKfycbykwGtDYJejSXcLcrNdNeAL5XUTfyXaCCixe96BKpbd47FrAmelht2LVJxRlw4k5kQu/exec",
+{
+method:"POST",
+body:JSON.stringify({
+action:"cancel",
+...target
+})
+}
+)
+.catch(err => console.error(err));
+}
+
 journal =
 journal.filter(j => j.ts !== ts);
 localStorage.setItem(
@@ -538,6 +555,7 @@ ts:new Date().toISOString(),staff:localStorage.getItem('staffName') || '未設�
         total,paid,change:paid-total
       });
 
+
 const latest = journal[journal.length - 1];
 fetch("https://script.google.com/macros/s/AKfycbykwGtDYJejSXcLcrNdNeAL5XUTfyXaCCixe96BKpbd47FrAmelht2LVJxRlw4k5kQu/exec",{
 method:"POST",
@@ -551,7 +569,6 @@ body:JSON.stringify(latest)
       if(historyModal.classList.contains('show')) renderHistory();
       alert('会計を記録しました');
     });
-
 
 
     document.getElementById('downloadExcel').addEventListener('click',()=>{
