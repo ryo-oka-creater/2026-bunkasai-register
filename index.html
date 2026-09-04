@@ -24,6 +24,14 @@
     .btn { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 12px;
            padding: 20px; font-weight: 700; font-size: 20px; cursor: pointer; background: #eef2ff; user-select: none;
            height: 100px; }
+
+.btn:hover{
+background:#dbeafe;
+}
+.btn:active{
+background:#bfdbfe;
+}
+
     .btn .price { font-size: 16px; font-weight: 600; color: var(--muted); }
     .btn.smallFont { font-size: 18px; }
     .right { display: grid; gap: 16px; grid-template-rows: auto 1fr auto; }
@@ -43,6 +51,12 @@ color: #fff;
 font-size: 18px;
 padding: 16px 24px;
 }
+
+.historyTable .danger{
+font-size: 14px;
+padding: 8px 12px;
+}
+
     .ok {
 background: #16a34a;
 color: #fff;
@@ -51,9 +65,17 @@ font-weight: 800;
 padding: 22px 36px;
 border-radius: 12px;
 transition: all 0.2s ease;
+width: 100%;
 }
     .muted { background: #e5e7eb; }
-    .small { font-size: 12px; color: var(--muted); }
+.smallText {
+font-size: 12px;
+color: var(--muted);
+}
+.smallBtn {
+font-size: 12px;
+padding: 4px 8px;
+}
     .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
     @media (max-width: 900px) { .container { grid-template-columns: 1fr; } .group { flex-direction: column; } }
     .modalOverlay { position: fixed; inset: 0; background: rgba(0,0,0,.35); display: none; align-items: center; justify-content: center; padding: 16px; z-index: 1000; }
@@ -98,8 +120,8 @@ transition: all 0.2s ease;
       <div class="card">
         <div class="total">合計：<span id="grandTotal">¥0</span></div>
         <div class="grid2" style="margin-top:10px">
-          <div><label class="small">いただいた金額</label><input type="text" id="paidInput" inputmode="numeric" pattern="[0-9]*" placeholder="0"></div>
-          <div><label class="small">お釣り</label><input type="text" id="changeOut" readonly></div>
+          <div><label class="smallText">いただいた金額</label><input type="text" id="paidInput" inputmode="numeric" pattern="[0-9]*" placeholder="0"></div>
+          <div><label class="smallText">お釣り</label><input type="text" id="changeOut" readonly></div>
         </div>
       </div>
       <div class="card">
@@ -151,7 +173,7 @@ id="saveStaffBtn">
       <div class="modalHeader">
         <div>
           <h2 style="margin:0;font-size:20px;">今回の会計履歴</h2>
-          <div class="small" id="historyStaffLabel"></div>
+          <div class="smallText" id="historyStaffLabel"></div>
         </div>
         <button class="actionBtn muted" id="closeHistoryBtn">閉じる</button>
       </div>
@@ -160,6 +182,9 @@ id="saveStaffBtn">
   </div>
 
   <script>
+
+//定数
+
     const itemsData = {
       CAL: {id:'CAL', name:'ナタデココドリンク（カルピス）', price:110, small:true},
       PEA: {id:'PEA', name:'ナタデココドリンク（ピーチ）', price:110, small:true},
@@ -176,6 +201,8 @@ id="saveStaffBtn">
 
     let cart = [];
 
+//DOM取得
+
     const staffNameEl = document.getElementById('staffName');
     const changeStaffBtn = document.getElementById('changeStaffBtn');
     const showHistoryBtn = document.getElementById('showHistoryBtn');
@@ -183,19 +210,12 @@ id="saveStaffBtn">
     const closeHistoryBtn = document.getElementById('closeHistoryBtn');
     const historyContent = document.getElementById('historyContent');
     const historyStaffLabel = document.getElementById('historyStaffLabel');
-
-const staffModal =
-document.getElementById('staffModal');
-const modalStaffName =
-document.getElementById('modalStaffName');
-const modalSaleDay =
-document.getElementById('modalSaleDay');
-const modalShiftType =
-document.getElementById('modalShiftType');
-const modalStartTime =
-document.getElementById('modalStartTime');
-const saveStaffBtn =
-document.getElementById('saveStaffBtn');
+    const staffModal = document.getElementById('staffModal');
+    const modalStaffName = document.getElementById('modalStaffName');
+    const modalSaleDay = document.getElementById('modalSaleDay');
+    const modalShiftType = document.getElementById('modalShiftType');
+    const modalStartTime = document.getElementById('modalStartTime');
+    const saveStaffBtn = document.getElementById('saveStaffBtn');
 
 const startTimeOptions = {
 'チケット売り場': [
@@ -218,7 +238,7 @@ const startTimeOptions = {
 function updateModalStartTimes(){
 const shift = modalShiftType.value;
 modalStartTime.innerHTML = '';
-startTimeOptions[shift].forEach(time => {
+(startTimeOptions[shift]||[]).forEach(time => {
 const option =
 document.createElement('option');
 option.value = time;
@@ -260,12 +280,11 @@ const saleDay = localStorage.getItem('saleDay') || '';
 const shiftType = localStorage.getItem('shiftType') || '';
 const startTime = localStorage.getItem('startTime') || '';
 if(staff === '未設定'){
-staffNameEl.innerHTML = '未設定';
+staffNameEl.textContent = '未設定';
 return;
 }
-staffNameEl.innerHTML =
-`${staff}<br>` +
-`（販売日:${saleDay} / 形式:${shiftType} / 開始:${startTime}）`;
+staffNameEl.textContent =
+`${staff} （販売日:${saleDay} / 形式:${shiftType} / 開始:${startTime}）`;
 }
 
 
@@ -277,6 +296,8 @@ const name = localStorage.getItem('staffName') || '';
 updateStaffDisplay();
 if(!name) setTimeout(setStaffName, 200);
 }
+
+//イベント登録
 
     changeStaffBtn.addEventListener('click', setStaffName);
 
@@ -294,7 +315,7 @@ return;
 
 localStorage.setItem(
 'staffName',
-modalStaffName.value
+staffName
 );
 localStorage.setItem(
 'saleDay',
@@ -331,9 +352,8 @@ staffModal.classList.remove('show');
 
 
       const journal = JSON.parse(localStorage.getItem('journal') || '[]');
-      const mine = journal;
-
-      if(mine.length === 0){
+ 
+      if(journal.length === 0){
 historyContent.innerHTML =
 '<div class="historyEmpty">今回の会計記録はまだありません。</div>';
 return;
@@ -341,7 +361,7 @@ return;
 
 // 商品別集計
 const summary = {};
-mine.forEach(j => {
+journal.forEach(j => {
 j.lines.forEach((r, lineIndex)=>{
 const isLastLine =
 lineIndex === j.lines.length - 1;
@@ -379,7 +399,7 @@ summaryHtml += `
 `;
 
       let rows = '';
-      mine.slice().reverse().forEach(j => {
+      journal.slice().reverse().forEach(j => {
         const itemLines = j.lines.map(r => r.name).join('<br>');
         const qtyLines = j.lines.map(r => r.qty).join('<br>');
         rows += `
@@ -394,7 +414,7 @@ summaryHtml += `
 <button
 class="actionBtn danger"
 onclick="deleteHistory('${j.ts}')">
-削除
+取消
 </button>
 </td>
 </tr>`
@@ -420,7 +440,7 @@ ${summaryHtml}
 
 
 function deleteHistory(ts){
-if(!confirm('この会計記録を削除しますか？')){
+if(!confirm('この会計記録を取消しますか？')){
 return;
 }
 let journal =
@@ -433,6 +453,9 @@ fetch(
 "https://script.google.com/macros/s/AKfycbykwGtDYJejSXcLcrNdNeAL5XUTfyXaCCixe96BKpbd47FrAmelht2LVJxRlw4k5kQu/exec",
 {
 method:"POST",
+headers:{
+"Content-Type":"application/json"
+},
 body:JSON.stringify({
 action:"cancel",
 ...target
@@ -465,6 +488,9 @@ renderHistory();
     });
 
     function yen(n){ return '¥' + n.toLocaleString('ja-JP'); }
+
+//関数
+
     function renderItems(){
       const wrap=document.getElementById('items');
       wrap.innerHTML='';
@@ -475,7 +501,15 @@ renderHistory();
           const it=itemsData[id];
           const btn=document.createElement('button');
           btn.className='btn'+(it.small?' smallFont':'');
-          btn.innerHTML=`<div>${it.name}</div><div class="price">${yen(it.price)}</div>`;
+
+const nameDiv=document.createElement('div');
+nameDiv.textContent=it.name;
+const priceDiv=document.createElement('div');
+priceDiv.className='price';
+priceDiv.textContent=yen(it.price);
+btn.appendChild(nameDiv);
+btn.appendChild(priceDiv);
+
           btn.onclick=()=>addToCart(it);
           group.appendChild(btn);
         });
@@ -500,7 +534,7 @@ renderHistory();
           <td>${yen(r.price)}</td>
           <td><input type="number" min="0" value="${r.qty}" data-index="${index}" class="qtyInput" style="width:60px"></td>
           <td>${yen(r.price*r.qty)}</td>
-          <td><button class="actionBtn danger small deleteBtn" data-index="${index}">削除</button></td>
+          <td><button class="actionBtn danger smallBtn deleteBtn" data-index="${index}">削除</button></td>
         `;
         body.appendChild(tr);
       });
@@ -508,8 +542,14 @@ renderHistory();
       // 数量変更イベント
       body.querySelectorAll('.qtyInput').forEach(input=>{
         input.addEventListener('input',(e)=>{
-          const idx=e.target.dataset.index;
-          const val=parseInt(e.target.value||'0',10);
+          const idx=Number(e.target.dataset.index);
+
+const val =
+Math.max(
+0,
+Number(e.target.value)
+);
+
           if(val<=0){ 
             cart.splice(idx,1); // 0以下なら削除
           } else {
@@ -522,7 +562,7 @@ renderHistory();
       // 削除ボタンイベント
       body.querySelectorAll('.deleteBtn').forEach(btn=>{
         btn.addEventListener('click',(e)=>{
-          const idx=e.target.dataset.index;
+          const idx=Number(e.target.dataset.index);
           cart.splice(idx,1);
           renderCart();
         });
@@ -535,16 +575,30 @@ renderHistory();
     const paidInput=document.getElementById('paidInput');
     const changeOut=document.getElementById('changeOut');
     paidInput.addEventListener('input',updateChange);
-    function updateChange(){
-      const paid=parseInt(paidInput.value||'0',10);
-      const change=paid-computeTotal();
-      changeOut.value= change>=0 ? yen(change) : '不足:'+yen(-change);
-    }
-    document.getElementById('checkoutBtn').addEventListener('click',()=>{
-      if(cart.length===0) return alert('カートが空です');
-      const paid=parseInt(paidInput.value||'0',10);
-      const total=computeTotal();
-      if(paid<total) return alert('お支払いが不足しています');
+
+function updateChange(){
+const paid =
+parseInt(
+paidInput.value.replace(/,/g,'') || '0',
+10
+);
+const change = paid - computeTotal();
+changeOut.value =
+change >= 0
+? yen(change)
+: '不足:' + yen(-change);
+}
+
+document.getElementById('checkoutBtn').addEventListener('click',()=>{
+if(cart.length===0) return alert('カートが空です');
+const paid =
+parseInt(
+paidInput.value.replace(/,/g,'') || '0',
+10
+);
+const total=computeTotal();
+if(paid<total) return alert('お支払いが不足しています');
+
       const journal=JSON.parse(localStorage.getItem('journal')||'[]');
 journal.push({
 receiptNo: crypto.randomUUID(),
@@ -559,14 +613,28 @@ ts:new Date().toISOString(),staff:localStorage.getItem('staffName') || '未設�
 
 const latest = journal[journal.length - 1];
 fetch("https://script.google.com/macros/s/AKfycbykwGtDYJejSXcLcrNdNeAL5XUTfyXaCCixe96BKpbd47FrAmelht2LVJxRlw4k5kQu/exec",{
+
+
+
+
 method:"POST",
+headers:{
+"Content-Type":"application/json"
+},
 body:JSON.stringify(latest)
 })
-.catch(err=>console.error(err));
+.catch(err=>{
+console.error(err);
+alert('Googleへの送信に失敗しました');
+});
+localStorage.setItem(
+'journal',
+JSON.stringify(journal)
+);
+cart=[];
+renderCart();
 
-
-      localStorage.setItem('journal',JSON.stringify(journal));
-      cart=[]; renderCart(); paidInput.value=''; updateChange();
+ paidInput.value=''; updateChange();
       if(historyModal.classList.contains('show')) renderHistory();
       alert('会計を記録しました');
     });
@@ -579,7 +647,7 @@ const journal=JSON.parse(localStorage.getItem('journal')||'[]');
 
 const detailData = [];
 
-journal.forEach((j,index)=>{
+journal.forEach((j)=>{
 const receiptNo = j.receiptNo;
 j.lines.forEach((r, lineIndex)=>{
 
@@ -644,6 +712,7 @@ const wb = XLSX.utils.book_new();
 const ws1 =
 XLSX.utils.json_to_sheet(detailData);
 
+
 ws1["!cols"] = [
 {wch:8},
 {wch:10},
@@ -661,8 +730,9 @@ ws1["!cols"] = [
 {wch:10},
 {wch:10}
 ];
-          
-      const ws2 =
+
+
+const ws2 =
 XLSX.utils.json_to_sheet(summaryData);
 XLSX.utils.book_append_sheet(
 wb,
@@ -700,12 +770,14 @@ const fileName =
 `${fileStaff}_${fileSaleDay}_${fileStartTime}_${ymd}_${hm}.xlsx`;
 
 
-XLSX.writeFile(
-wb,
-fileName
-);
-
+try{
+XLSX.writeFile(wb,fileName);
 localStorage.removeItem('journal');
+}catch(err){
+alert('Excel出力に失敗しました');
+return;
+}
+
 if(historyModal.classList.contains('show')){
 renderHistory();
 }
