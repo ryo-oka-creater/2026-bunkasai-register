@@ -167,7 +167,6 @@ id="saveStaffBtn">
 </div>
 </div>
 
-
   <div class="modalOverlay" id="historyModal">
     <div class="modalCard">
       <div class="modalHeader">
@@ -186,12 +185,36 @@ id="saveStaffBtn">
 //定数
 
     const itemsData = {
-      CAL: {id:'CAL', name:'ナタデココドリンク（カルピス）', price:110, small:true},
-      PEA: {id:'PEA', name:'ナタデココドリンク（ピーチ）', price:110, small:true},
-      DUB: {id:'DUB', name:'ドバイチョコ', price:620},
-      TAK: {id:'TAK', name:'たこ焼き', price:150},
-      POT: {id:'POT', name:'フライドポテト', price:100}
-    };
+CAL: {
+id:'CAL',
+name:'ナタデココドリンク（カルピス）',
+displayName:'ナタデココドリンク<br>（カルピス）',
+price:110,
+small:true
+},
+PEA: {
+id:'PEA',
+name:'ナタデココドリンク（ピーチ）',
+displayName:'ナタデココドリンク<br>（ピーチ）',
+price:110,
+small:true
+},
+DUB: {
+id:'DUB',
+name:'ドバイチョコ',
+price:620
+},
+TAK: {
+id:'TAK',
+name:'たこ焼き',
+price:150
+},
+POT: {
+id:'POT',
+name:'フライドポテト',
+price:100
+}
+};
 
     const itemGroups = [
       ['CAL','PEA'],
@@ -257,7 +280,6 @@ modalShiftType.addEventListener(
 updateModalStartTimes
 );
 
-
 function setStaffName(){
 modalStaffName.value =
 localStorage.getItem('staffName') || '';
@@ -272,8 +294,6 @@ localStorage.getItem('startTime') || '';
 staffModal.classList.add('show');
 }
  
-
-
 function updateStaffDisplay(){
 const staff = localStorage.getItem('staffName') || '未設定';
 const saleDay = localStorage.getItem('saleDay') || '';
@@ -287,10 +307,6 @@ staffNameEl.textContent =
 `${staff} （販売日:${saleDay} / 形式:${shiftType} / 開始:${startTime}）`;
 }
 
-
-
-
-
    function loadStaffName(){
 const name = localStorage.getItem('staffName') || '';
 updateStaffDisplay();
@@ -300,7 +316,6 @@ if(!name) setTimeout(setStaffName, 200);
 //イベント登録
 
     changeStaffBtn.addEventListener('click', setStaffName);
-
 
 saveStaffBtn.addEventListener('click', ()=>{
 
@@ -333,8 +348,6 @@ updateStaffDisplay();
 staffModal.classList.remove('show');
 });
 
-
-
     function formatTime(ts){
       const d = new Date(ts);
       return d.toLocaleTimeString('ja-JP', {hour:'2-digit', minute:'2-digit'});
@@ -349,7 +362,6 @@ staffModal.classList.remove('show');
         historyContent.innerHTML = '<div class="historyEmpty">先に担当者名を設定してください。</div>';
         return;
       }
-
 
       const journal = JSON.parse(localStorage.getItem('journal') || '[]');
  
@@ -438,7 +450,6 @@ ${summaryHtml}
         </table>`;
     }
 
-
 function deleteHistory(ts){
 if(!confirm('この会計記録を取消しますか？')){
 return;
@@ -500,10 +511,12 @@ renderHistory();
           btn.className='btn'+(it.small?' smallFont':'');
 
 const nameDiv=document.createElement('div');
-nameDiv.textContent=it.name;
+nameDiv.innerHTML = it.displayName || it.name;
+
 const priceDiv=document.createElement('div');
 priceDiv.className='price';
 priceDiv.textContent=yen(it.price);
+
 btn.appendChild(nameDiv);
 btn.appendChild(priceDiv);
 
@@ -721,7 +734,6 @@ ws1["!cols"] = [
 {wch:10},
 {wch:10}
 ];
-
 
 const ws2 =
 XLSX.utils.json_to_sheet(summaryData);
