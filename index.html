@@ -612,22 +612,14 @@ ts:new Date().toISOString(),staff:localStorage.getItem('staffName') || '未設�
 
 
 const latest = journal[journal.length - 1];
-
-console.log("before fetch");
-fetch("https://script.google.com/macros/s/AKfycbykwGtDYJejSXcLcrNdNeAL5XUTfyXaCCixe96BKpbd47FrAmelht2LVJxRlw4k5kQu/exec", {
-method: "POST",
-
-body: JSON.stringify(latest)
+fetch("https://script.google.com/macros/s/AKfycbykwGtDYJejSXcLcrNdNeAL5XUTfyXaCCixe96BKpbd47FrAmelht2LVJxRlw4k5kQu/exec",
+{
+method:"POST",
+body:JSON.stringify(latest)
 })
-.then(r => {
-console.log("status=", r.status);
-return r.text();
-})
-.then(t => {
-console.log("response=", t);
-})
-.catch(e => {
-console.error("fetch error=", e);
+.catch(err=>{
+console.error(err);
+alert('Googleへの送信に失敗しました');
 });
 localStorage.setItem(
 'journal',
