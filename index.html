@@ -185,17 +185,20 @@ id="saveStaffBtn">
 //定数
 
     const itemsData = {
+
 CAL: {
 id:'CAL',
 name:'ナタデココドリンク（カルピス）',
-displayName:'ナタデココドリンク<br>（カルピス）',
+displayName:'<span style="font-size:27px;">🥛 カルピス</span><br>ナタデココドリンク',
+btnColor:'#dbeafe',
 price:110,
 small:true
 },
 PEA: {
 id:'PEA',
 name:'ナタデココドリンク（ピーチ）',
-displayName:'ナタデココドリンク<br>（ピーチ）',
+displayName:'<span style="font-size:27px;">🍑 ピーチ</span><br>ナタデココドリンク',
+btnColor:'#fce7f3',
 price:110,
 small:true
 },
@@ -326,7 +329,6 @@ alert('担当者・曜日・販売形式・シフト開始時間を設定して�
 modalStaffName.focus();
 return;
 }
-
 
 localStorage.setItem(
 'staffName',
@@ -510,8 +512,14 @@ renderHistory();
           const btn=document.createElement('button');
           btn.className='btn'+(it.small?' smallFont':'');
 
+if(it.btnColor){
+btn.style.background = it.btnColor;
+}
+
 const nameDiv=document.createElement('div');
 nameDiv.innerHTML = it.displayName || it.name;
+nameDiv.style.textAlign = 'center';
+nameDiv.style.lineHeight = '1.3';
 
 const priceDiv=document.createElement('div');
 priceDiv.className='price';
