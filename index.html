@@ -617,7 +617,7 @@ console.log("before fetch");
 fetch("https://script.google.com/macros/s/AKfycbykwGtDYJejSXcLcrNdNeAL5XUTfyXaCCixe96BKpbd47FrAmelht2LVJxRlw4k5kQu/exec", {
 method: "POST",
 
-body: JSON.stringify(data)
+body: JSON.stringify(latest)
 })
 .then(r => {
 console.log("status=", r.status);
