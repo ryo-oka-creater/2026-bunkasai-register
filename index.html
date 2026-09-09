@@ -25,11 +25,15 @@
            padding: 20px; font-weight: 700; font-size: 20px; cursor: pointer; background: #eef2ff; user-select: none;
            height: 100px; }
 
+.btn{
+transition: all 0.2s ease;
+}
 .btn:hover{
-background:#dbeafe;
+transform: translateY(-2px);
+filter: brightness(0.96);
 }
 .btn:active{
-background:#bfdbfe;
+transform: scale(0.98);
 }
 
     .btn .price { font-size: 16px; font-weight: 600; color: var(--muted); }
@@ -205,19 +209,27 @@ small:true
 DUB: {
 id:'DUB',
 name:'ドバイチョコ',
-price:620
+displayName:'<span style="font-size:27px;">🍫 ドバイチョコ</span>',
+btnColor:'#fef3c7',
+price:620,
+small:true
 },
 TAK: {
 id:'TAK',
 name:'たこ焼き',
-price:150
+displayName:'<span style="font-size:27px;">🐙 たこ焼き</span>',
+btnColor:'#fed7aa',
+price:150,
+small:true
 },
 POT: {
 id:'POT',
 name:'フライドポテト',
-price:100
+displayName:'<span style="font-size:27px;">🍟 ポテト</span><br>フライドポテト',
+btnColor:'#fde68a',
+price:100,
+small:true
 }
-};
 
     const itemGroups = [
       ['CAL','PEA'],
