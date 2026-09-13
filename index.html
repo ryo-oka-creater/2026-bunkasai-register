@@ -144,6 +144,7 @@ padding: 4px 8px;
 <div style="margin-bottom:10px;">
 <label>販売日</label>
 <select id="modalSaleDay">
+<option value="">選択してください</option> 
 <option value="土曜">土曜</option>
 <option value="日曜">日曜</option>
 </select>
@@ -151,6 +152,7 @@ padding: 4px 8px;
 <div style="margin-bottom:10px;">
 <label>販売形式</label>
 <select id="modalShiftType">
+<option value="">選択してください</option> 
 <option value="チケット売り場">
 チケット売り場
 </option>
@@ -277,6 +279,14 @@ const startTimeOptions = {
 function updateModalStartTimes(){
 const shift = modalShiftType.value;
 modalStartTime.innerHTML = '';
+
+const firstOption =
+document.createElement('option');
+firstOption.value = '';
+firstOption.textContent =
+'選択してください';
+modalStartTime.appendChild(firstOption);
+
 (startTimeOptions[shift]||[]).forEach(time => {
 const option =
 document.createElement('option');
@@ -300,10 +310,9 @@ function setStaffName(){
 modalStaffName.value =
 localStorage.getItem('staffName') || '';
 modalSaleDay.value =
-localStorage.getItem('saleDay') || '土曜';
+localStorage.getItem('saleDay') || '';
 modalShiftType.value =
-localStorage.getItem('shiftType') ||
-'チケット売り場';
+localStorage.getItem('shiftType') || '';
 updateModalStartTimes();
 modalStartTime.value =
 localStorage.getItem('startTime') || '';
@@ -337,9 +346,15 @@ saveStaffBtn.addEventListener('click', ()=>{
 
 const staffName =
 modalStaffName.value.trim();
-if(!staffName){
-alert('担当者・曜日・販売形式・シフト開始時間を設定してください。');
-modalStaffName.focus();
+if(
+!staffName ||
+!modalSaleDay.value ||
+!modalShiftType.value ||
+!modalStartTime.value
+){
+alert(
+'担当者・販売日・販売形式・シフト開始時間を設定してください。'
+);
 return;
 }
 
@@ -796,7 +811,18 @@ const fileName =
 
 try{
 XLSX.writeFile(wb,fileName);
+
 localStorage.removeItem('journal');
+
+localStorage.removeItem('staffName');
+localStorage.removeItem('saleDay');
+localStorage.removeItem('shiftType');
+localStorage.removeItem('startTime');
+
+updateStaffDisplay();
+
+setTimeout(setStaffName,300);
+
 }catch(err){
 alert('Excel出力に失敗しました');
 return;
