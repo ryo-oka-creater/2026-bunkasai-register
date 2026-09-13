@@ -682,6 +682,14 @@ renderCart();
 
     document.getElementById('downloadExcel').addEventListener('click',()=>{
 
+if(cart.length > 0){
+alert(
+'未会計の商品がカートに残っています。\n' +
+'商品を削除するか、会計確定を行ってください。'
+);
+return;
+}
+
 const journal=JSON.parse(localStorage.getItem('journal')||'[]');
       if(journal.length===0) return alert('データがありません');
 
